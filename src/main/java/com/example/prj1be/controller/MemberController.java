@@ -3,8 +3,10 @@ package com.example.prj1be.controller;
 import com.example.prj1be.domain.Member;
 import com.example.prj1be.service.MemberService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.WebRequest;
 
 import java.util.List;
 
@@ -41,6 +43,14 @@ public class MemberController {
             return ResponseEntity.ok().build();
         }
     }
+    @GetMapping(value = "check",params = "nickname")
+    public ResponseEntity checkNickname(String nickname) {
+        if (service.getNickname(nickname)==null){
+            return ResponseEntity.notFound().build();
+        }else {
+            return ResponseEntity.ok().build();
+        }
+    }
     @GetMapping("list")
     public List<Member> list() {
         return service.list();
@@ -50,5 +60,29 @@ public class MemberController {
     public ResponseEntity<Member> view(String id) {
         Member member = service.getMember(id);
         return ResponseEntity.ok(member);
+    }
+
+    @DeleteMapping
+    public ResponseEntity delete(String id) {
+        if (service.deleteMember(id)) {
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.internalServerError().build();
+    }
+    @PutMapping("/edit")
+    public ResponseEntity edit(@RequestBody Member member) {
+        if (service.edit(member)){
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    @PostMapping("login")
+    public ResponseEntity login(@RequestBody Member member, WebRequest request) {
+        if (service.login(member,request)) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
 }
