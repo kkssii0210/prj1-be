@@ -35,4 +35,19 @@ public class CommentController {
     public List<Comment> list(@RequestParam("id") Integer boardId) {
         return service.list(boardId);
     }
+    @DeleteMapping("delete/{commentId}")
+    public ResponseEntity delete(@PathVariable Integer commentId,@SessionAttribute(value = "login",required = false)Member login) {
+        if (login == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        if (service.hasAccess(commentId,login)){
+            if (service.delete(commentId)){
+                return ResponseEntity.ok().build();
+            }else {
+                return ResponseEntity.internalServerError().build();
+            }
+        }else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
 }

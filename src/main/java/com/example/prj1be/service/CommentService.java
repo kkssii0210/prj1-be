@@ -33,4 +33,14 @@ public class CommentService {
     public List<Comment> list(Integer boardId) {
         return mapper.selectByBoardId(boardId);
     }
+
+
+    public boolean delete(Integer commentId) {
+        return mapper.deleteById(commentId) == 1;
+    }
+
+    public boolean hasAccess(Integer commentId, Member login) {
+        Comment comment = mapper.selectById(commentId);
+        return comment.getMemberId().equals(login.getId());
+    }
 }
