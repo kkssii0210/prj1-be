@@ -12,18 +12,18 @@ public interface BoardMapper {
 INSERT INTO board (title, content, writer)
 VALUES (#{title},#{content},#{writer})
 """)
-    int insert(Board board);
+    int insert(MyDto1 dto);
 
     @Select("""
-SELECT id,title,writer,inserted
-FROM board
-ORDER BY id desc
+SELECT b.id,b.title,m.nickname,b.inserted,b.writer
+FROM board b JOIN member m ON b.writer = m.id
+ORDER BY b.id desc
 """)
     List<MyDto1> selectAll();
 @Select("""
-SELECT *
-FROM board
-WHERE id = #{id}
+SELECT b.id,b.title,m.id writer,b.inserted,b.content,m.nickname
+FROM board b JOIN member m ON b.writer = m.id
+WHERE b.id = #{id}
 """)
     MyDto1 selectById(Integer id);
 @Delete("""
@@ -39,4 +39,10 @@ writer=#{writer}
 WHERE id=#{id}
 """)
     int updateById(MyDto1 dto);
+
+@Delete("""
+DELETE FROM board
+WHERE writer = #{writer}
+""")
+int deleteByWriter(String writer);
 }

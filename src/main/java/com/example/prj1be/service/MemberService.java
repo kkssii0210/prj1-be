@@ -1,6 +1,8 @@
 package com.example.prj1be.service;
 
+import com.example.prj1be.domain.Auth;
 import com.example.prj1be.domain.Member;
+import com.example.prj1be.mapper.BoardMapper;
 import com.example.prj1be.mapper.MemberMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MemberService {
     private final MemberMapper mapper;
+    private final BoardMapper boardMapper;
     public boolean add(Member member) {
        return mapper.insert(member) == 1;
     }
@@ -56,6 +59,7 @@ public class MemberService {
 
 
     public boolean deleteMember(String id) {
+        boardMapper.deleteByWriter(id);
         return mapper.deleteById(id) == 1;
     }
 
@@ -65,12 +69,29 @@ public class MemberService {
 
     public boolean login(Member member, WebRequest request) {
         Member dbMember = mapper.selectById(member.getId());
+
+        List<Auth>auth = mapper.selectAuthById(member.getId());
+        dbMember.setAuth(auth);
         if (dbMember != null) {
             if (dbMember.getPassword().equals(member.getPassword())){
                 dbMember.setPassword("");
                 request.setAttribute("login",dbMember, RequestAttributes.SCOPE_SESSION);
                 return true;
             }
+        }
+        return false;
+    }
+
+    public boolean hasAccess(String id, Member login) {
+        if (isAdmin(login)){
+            return true;
+        }
+        return login.getId().equals(id);
+    }
+    public boolean isAdmin(Member login) {
+        if (login.getAuth() != null) {
+            return login.getAuth().stream().map(e -> e.getName())
+                    .anyMatch(n->n.equals("admin"));
         }
         return false;
     }

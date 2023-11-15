@@ -2,6 +2,7 @@ package com.example.prj1be.controller;
 
 import com.example.prj1be.domain.Member;
 import com.example.prj1be.service.MemberService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -57,20 +58,41 @@ public class MemberController {
     }
 
     @GetMapping
-    public ResponseEntity<Member> view(String id) {
+    public ResponseEntity<Member> view(String id, @SessionAttribute(value = "login",required = false) Member login) {
+        ResponseEntity<Member> UNAUTHORIZED = getMemberResponseEntity(id, login);
+        if (UNAUTHORIZED != null) return UNAUTHORIZED;
         Member member = service.getMember(id);
         return ResponseEntity.ok(member);
     }
 
+    private ResponseEntity<Member> getMemberResponseEntity(String id,Member login) {
+        if (login == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        if (!service.hasAccess(id, login)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        return null;
+    }
+
     @DeleteMapping
-    public ResponseEntity delete(String id) {
+    public ResponseEntity delete(String id, @SessionAttribute(value = "login",required = false)Member login) {
+        ResponseEntity<Member> UNAUTHORIZED = getMemberResponseEntity(id, login);
+        if (UNAUTHORIZED != null) return UNAUTHORIZED;
         if (service.deleteMember(id)) {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.internalServerError().build();
     }
     @PutMapping("/edit")
-    public ResponseEntity edit(@RequestBody Member member) {
+    public ResponseEntity edit(@RequestBody Member member, @SessionAttribute(value = "login",required = false)Member login) {
+
+        if(login == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        if (!service.hasAccess(member.getId(), login)){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         if (service.edit(member)){
             return ResponseEntity.ok().build();
         } else {
@@ -84,5 +106,15 @@ public class MemberController {
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+    }
+    @PostMapping("logout")
+    public void logout(HttpSession session) {
+        if (session != null) {
+            session.invalidate();
+        }
+    }
+    @GetMapping("login")
+    public Member login(@SessionAttribute(value = "login",required = false)Member login) {
+        return login;
     }
 }

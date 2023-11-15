@@ -9,5 +9,6 @@ public class MyDto1 {
     private String title;
     private String content;
     private String writer;
+    private String nickname;
     private String inserted;
 }
