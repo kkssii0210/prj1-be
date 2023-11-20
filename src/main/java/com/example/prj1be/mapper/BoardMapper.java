@@ -9,40 +9,66 @@ import java.util.List;
 @Mapper
 public interface BoardMapper {
     @Insert("""
-INSERT INTO board (title, content, writer)
-VALUES (#{title},#{content},#{writer})
-""")
-    int insert(MyDto1 dto);
+           INSERT INTO board (title, content, writer)
+           VALUES (#{title},#{content},#{writer})
+            """)
+    @Options(useGeneratedKeys = true, keyProperty = "id")
+    int insert(Board board);
 
     @Select("""
-SELECT b.id,b.title,m.nickname,b.inserted,b.writer
-FROM board b JOIN member m ON b.writer = m.id
-ORDER BY b.id desc
-""")
-    List<MyDto1> selectAll();
-@Select("""
-SELECT b.id,b.title,m.id writer,b.inserted,b.content,m.nickname
-FROM board b JOIN member m ON b.writer = m.id
-WHERE b.id = #{id}
-""")
-    MyDto1 selectById(Integer id);
-@Delete("""
-DELETE FROM board
-WHERE id = #{id}
-""")
+            SELECT b.id,b.title,m.nickname,b.inserted,b.writer,COUNT(DISTINCT c.id) countComment,COUNT(DISTINCT l.id) countLike
+            FROM board b JOIN member m ON b.writer = m.id LEFT JOIN comment c on b.id = c.boardId LEFT JOIN boardlike l ON b.id =l.boardId
+            WHERE b.content LIKE #{keyword}
+            OR b.title LIKE #{keyword}
+            GROUP BY b.id
+            ORDER BY b.id desc
+            LIMIT #{from},10
+            """)
+    List<Board> selectAll(Integer from, String keyword);
+
+    @Select("""
+
+            SELECT b.id,b.title,b.inserted,b.content,m.nickname
+            FROM board b JOIN member m ON b.writer = m.id
+            WHERE b.id = #{id}
+            """)
+    Board selectById(Integer id);
+
+    @Delete("""
+
+            DELETE FROM board
+            WHERE id = #{id}
+            """)
     int deleteById(Integer id);
-@Update("""
-UPDATE board
-SET title=#{title},
-content=#{content},
-writer=#{writer}
-WHERE id=#{id}
-""")
+
+    @Update("""
+
+            UPDATE board
+            SET title=#{title},
+            content=#{content},
+            writer=#{writer}
+            WHERE id=#{id}
+            """)
     int updateById(MyDto1 dto);
 
-@Delete("""
-DELETE FROM board
-WHERE writer = #{writer}
-""")
-int deleteByWriter(String writer);
+    @Delete("""
+            DELETE FROM board
+                    WHERE writer = #{writer}
+                    """)
+    int deleteByWriter(String writer);
+
+    @Select("""
+                 SELECT id
+            FROM board
+            WHERE writer = #{id}
+            """)
+    List<Integer> selectIdListByMemberId(String writer);
+
+    @Select("""
+                 SELECT COUNT(*) FROM board
+                 WHERE title LIKE #{keyword}
+                 OR content LIKE #{keyword}
+            """)
+    int countAll(String keyword);
+
 }

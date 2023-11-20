@@ -9,8 +9,11 @@ import org.apache.ibatis.annotations.Delete;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -20,15 +23,16 @@ public class BoardController {
     private final BoardService service;
 
     @PostMapping("add")
-    public ResponseEntity add(@RequestBody MyDto1 dto, @SessionAttribute(value = "login",required = false) Member login) {
+    public ResponseEntity add(Board board,@RequestParam(value = "files[]",required = false) MultipartFile[] files, @SessionAttribute(value = "login",required = false) Member login) throws IOException {
+
         if (login == null){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        if (!service.validate(dto)) {
+        if (!service.validate(board)) {
             return ResponseEntity.badRequest().build();
         }
 
-        if (service.save(dto,login)) {
+        if (service.save(board,login,files)) {
             return ResponseEntity.ok().build();
         } else {
             return ResponseEntity.internalServerError().build();
@@ -36,13 +40,13 @@ public class BoardController {
     }
 
     @GetMapping("list")
-    public List<MyDto1> List() {
-        List<MyDto1> dto = service.findAll();
-        return dto;
+    public Map<String, Object> list(@RequestParam(value = "p", defaultValue = "1") Integer page,
+                                    @RequestParam(value = "k",defaultValue = "")String keyword) {
+        return service.list(page,keyword);
     }
 
     @GetMapping("id/{id}")
-    public MyDto1 get(@PathVariable Integer id) {
+    public Board get(@PathVariable Integer id) {
         return service.get(id);
     }
 
