@@ -30,6 +30,9 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.2'
     implementation 'software.amazon.awssdk:s3:2.21.26'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.3' // 버전 조정
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
 }
 
 tasks.named('test') {

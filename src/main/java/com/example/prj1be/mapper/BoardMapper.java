@@ -1,7 +1,6 @@
 package com.example.prj1be.mapper;
 
 import com.example.prj1be.domain.Board;
-import com.example.prj1be.domain.MyDto1;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
@@ -16,19 +15,30 @@ public interface BoardMapper {
     int insert(Board board);
 
     @Select("""
-            SELECT b.id,b.title,m.nickname,b.inserted,b.writer,COUNT(DISTINCT c.id) countComment,COUNT(DISTINCT l.id) countLike
+            <script>
+            SELECT b.id,b.title,m.nickname,b.inserted,b.writer,COUNT(DISTINCT c.id) countComment,COUNT(DISTINCT l.id) countLike,
+            COUNT(DISTINCT  f.id)countFile
             FROM board b JOIN member m ON b.writer = m.id LEFT JOIN comment c on b.id = c.boardId LEFT JOIN boardlike l ON b.id =l.boardId
-            WHERE b.content LIKE #{keyword}
-            OR b.title LIKE #{keyword}
+            LEFT JOIN boardfile f ON b.id = f.boardId
+            WHERE 
+            <trim prefixOverrides="OR">
+                 <if test="category == 'all' or category == 'title'">
+                 OR title LIKE #{keyword}
+                 </if>
+                 <if test="category == 'all' or category == 'content'">
+                 OR content LIKE #{keyword}
+                 </if>
+                 </trim>
             GROUP BY b.id
-            ORDER BY b.id desc
+            ORDER BY b.id DESC 
             LIMIT #{from},10
+            </script>
             """)
-    List<Board> selectAll(Integer from, String keyword);
+    List<Board> selectAll(Integer from, String keyword, String category);
 
     @Select("""
 
-            SELECT b.id,b.title,b.inserted,b.content,m.nickname
+            SELECT b.id,b.title,b.inserted,b.content,m.nickname,b.writer
             FROM board b JOIN member m ON b.writer = m.id
             WHERE b.id = #{id}
             """)
@@ -45,11 +55,10 @@ public interface BoardMapper {
 
             UPDATE board
             SET title=#{title},
-            content=#{content},
-            writer=#{writer}
+            content=#{content}
             WHERE id=#{id}
             """)
-    int updateById(MyDto1 dto);
+    int updateById(Board board);
 
     @Delete("""
             DELETE FROM board
@@ -65,10 +74,19 @@ public interface BoardMapper {
     List<Integer> selectIdListByMemberId(String writer);
 
     @Select("""
+                 <script>
                  SELECT COUNT(*) FROM board
-                 WHERE title LIKE #{keyword}
+                 WHERE 
+                 <trim prefixOverrides="OR">
+                 <if test="category == 'all' or category == 'title'">
+                 OR title LIKE #{keyword}
+                 </if>
+                 <if test="category== 'all' or category == 'content'">
                  OR content LIKE #{keyword}
+                 </if>
+                 </trim>
+                 </script>
             """)
-    int countAll(String keyword);
+    int countAll(String keyword, String category);
 
 }

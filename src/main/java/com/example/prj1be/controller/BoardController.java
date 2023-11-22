@@ -4,6 +4,8 @@ import com.example.prj1be.domain.Board;
 import com.example.prj1be.domain.Member;
 import com.example.prj1be.domain.MyDto1;
 import com.example.prj1be.service.BoardService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
 import org.apache.ibatis.annotations.Delete;
 import org.springframework.http.HttpStatus;
@@ -23,7 +25,7 @@ public class BoardController {
     private final BoardService service;
 
     @PostMapping("add")
-    public ResponseEntity add(Board board,@RequestParam(value = "files[]",required = false) MultipartFile[] files, @SessionAttribute(value = "login",required = false) Member login) throws IOException {
+    public ResponseEntity add(Board board,@RequestParam(value = "uploadFiles[]",required = false) MultipartFile[] files, @SessionAttribute(value = "login",required = false) Member login) throws IOException {
 
         if (login == null){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -41,8 +43,9 @@ public class BoardController {
 
     @GetMapping("list")
     public Map<String, Object> list(@RequestParam(value = "p", defaultValue = "1") Integer page,
-                                    @RequestParam(value = "k",defaultValue = "")String keyword) {
-        return service.list(page,keyword);
+                                    @RequestParam(value = "k",defaultValue = "")String keyword,
+                                    @RequestParam(value = "c",defaultValue = "all")String category) {
+        return service.list(page,keyword,category);
     }
 
     @GetMapping("id/{id}")
@@ -67,19 +70,23 @@ public class BoardController {
     }
 
     @PutMapping("edit")
-    public ResponseEntity edit(@RequestBody MyDto1 dto, @SessionAttribute(value = "login",required = false)Member login) {
+    public ResponseEntity edit(Board board,@RequestParam(value = "removeFileIds[]",required = false)List<Integer> removeFileIds,
+                               @RequestParam(value = "uploadFiles[]",required = false) MultipartFile[] uploadFiles,
+                               @SessionAttribute(value = "login",required = false)Member login) throws IOException {
+
         if (login == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        if (!service.hasAccess(dto.getId(),login)){
+        if (!service.hasAccess(board.getId(),login)){
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        if (service.edit(dto)) {
+        if (service.edit(board,removeFileIds,uploadFiles)) {
             return ResponseEntity.ok().build();
         } else {
             return ResponseEntity.internalServerError().build();
         }
     }
+
 
 
 

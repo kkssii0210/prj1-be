@@ -1,8 +1,8 @@
 package com.example.prj1be.service;
 
 import com.example.prj1be.domain.Board;
+import com.example.prj1be.domain.BoardFile;
 import com.example.prj1be.domain.Member;
-import com.example.prj1be.domain.MyDto1;
 import com.example.prj1be.mapper.BoardMapper;
 import com.example.prj1be.mapper.CommentMapper;
 import com.example.prj1be.mapper.FileMapper;
@@ -14,12 +14,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -27,13 +28,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class BoardService {
     private final BoardMapper mapper;
-    private final MemberService memberService;
     private final LikeMapper likeMapper;
     private final CommentMapper commentMapper;
     private final FileMapper fileMapper;
     @Value("${aws.s3.bucket.name}")
     private String bucket;
     private final S3Client s3;
+    @Value("${image.file.prefix}")
+    private String urlPrefix;
 
 
     public boolean save(Board board, Member login, MultipartFile[] files) throws IOException {
@@ -53,15 +55,6 @@ public class BoardService {
     }
 
     private void upload(Integer boardId, MultipartFile file) throws IOException {
-        // 파일 저장 경로
-        // C:\Temp\prj1\게시물번호\파일명
-//            File folder = new File("C:\\Temp\\prj1\\"+boardId);
-//            if (!folder.exists()) {
-//                folder.mkdirs();
-//            }
-//            String path = folder.getAbsolutePath() + "\\" + file.getOriginalFilename();
-//            File des = new File(path);
-//            file.transferTo(des);
         String key = "prj1/" + boardId + "/" +file.getOriginalFilename();
         PutObjectRequest objectRequest = PutObjectRequest.builder()
                 .bucket(bucket)
@@ -84,12 +77,12 @@ public class BoardService {
         }
         return true;
     }
-    public Map<String, Object> list(Integer page, String keyword) {
+    public Map<String, Object> list(Integer page, String keyword, String category) {
         Map<String, Object> map = new HashMap<>();
         Map<String, Object> pageInfo = new HashMap<>();
 
 //        int countAll = mapper.countAll();
-        int countAll = mapper.countAll("%"+keyword+"%");
+        int countAll = mapper.countAll("%"+keyword+"%",category);
         int lastPageNumber = (countAll - 1) / 10 + 1;
         int startPageNumber = (page - 1) / 10 * 10 + 1;
         int endPageNumber = startPageNumber + 9;
@@ -108,21 +101,67 @@ public class BoardService {
         }
 
         int from = (page - 1) * 10;
-        map.put("boardList", mapper.selectAll(from,"%"+keyword+"%"));
+        map.put("boardList", mapper.selectAll(from,"%"+keyword+"%",category));
         map.put("pageInfo", pageInfo);
         return map;
     }
     public Board get(Integer id) {
-        return mapper.selectById(id);
+        Board board = mapper.selectById(id);
+        List<BoardFile> boardFiles = fileMapper.selectNamesByBoardId(id);
+        for (BoardFile boardFile :
+                boardFiles) {
+            String url = urlPrefix + "prj1/" + id + "/" +boardFile.getName();
+            boardFile.setUrl(url);
+        }
+        board.setFiles(boardFiles);
+        return board;
     }
     public boolean remove(Integer id) {
         likeMapper.deleteById(id);
         commentMapper.deleteByBoardId(id);
+        deleteFile(id);
         return mapper.deleteById(id) == 1;
     }
 
-    public boolean edit(MyDto1 dto) {
-        return mapper.updateById(dto) == 1;
+    private void deleteFile(Integer id) {
+        // 파일명 조회
+        List<BoardFile> boardFiles = fileMapper.selectNamesByBoardId(id);
+        // s3 object지우기
+        for (BoardFile file :
+                boardFiles) {
+            String key = "prj1/" + id + "/" +file.getName();
+            DeleteObjectRequest objectRequest = DeleteObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build();
+            s3.deleteObject(objectRequest);
+        }
+        fileMapper.deleteByBoardId(id);
+    }
+
+    public boolean edit(Board board, List<Integer> removeFileIds,MultipartFile[] uploadFiles) throws IOException {
+        if (removeFileIds != null){
+            for (Integer id :
+                    removeFileIds) {
+                BoardFile file = fileMapper.selectById(id);
+                String key = "prj1/" + board.getId() + "/" +file.getName();
+                DeleteObjectRequest objectRequest = DeleteObjectRequest.builder()
+                        .bucket(bucket)
+                        .key(key)
+                        .build();
+                s3.deleteObject(objectRequest);
+                fileMapper.deleteById(id);
+            }
+        }
+        if (uploadFiles != null){
+            for (MultipartFile file : uploadFiles) {
+                upload(board.getId(), file);
+                fileMapper.insert(board.getId(), file.getOriginalFilename());
+            }
+
+        }
+
+        return mapper.updateById(board) == 1;
     }
 
     public boolean hasAccess(Integer id, Member login) {
@@ -138,5 +177,6 @@ public class BoardService {
 
         return board.getWriter().equals(login.getId());
     }
+
 
 }
