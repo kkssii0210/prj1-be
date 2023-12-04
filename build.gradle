@@ -33,6 +33,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.3' // 버전 조정
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
+
 }
 
 tasks.named('test') {

@@ -11,7 +11,7 @@ import java.util.List;
 @Mapper
 public interface FileMapper {
 @Insert("""
-INSERT INTO boardFile(boardId,name)
+INSERT INTO boardfile(boardId,name)
 VALUES (#{boardId},#{name})
 """)
 int insert(Integer boardId,String name);

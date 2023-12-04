@@ -21,7 +21,7 @@ public class MyDto1 {
     private Integer countComment;
     private LocalDateTime ago;
     public String getAgo() {
-        return AppUtil.getAgo(inserted, LocalDateTime.now());
+        return AppUtil.getAgo(inserted);
     }
 
 //    public String getAgo() {
