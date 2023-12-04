@@ -28,15 +28,8 @@ jobs:
         run: zip -qq -r ./$GITHUB_SHA.zip .
         shell: bash
 
-      - name: 🗂️ Make config folder
-        run: mkdir -p config
-      - name: ⚙️ Create .env file
-        run: |
-          touch ${{ env.ENV_PATH }}
-          echo DOMAIN_FIR=${{ secrets.DOMAIN_FIR }} >> ${{ env.ENV_PATH }}
-          echo SOCKET_PORT_PROD=${{ secrets.SOCKET_PORT_PROD }} >> ${{ env.ENV_PATH }}
-          echo SOCKET_PORT_TEST=${{ secrets.SOCKET_PORT_TEST }} >> ${{ env.ENV_PATH }}
-      
+
+
 
       - name: 🌎 Access to AWS
         uses: aws-actions/configure-aws-credentials@v2
