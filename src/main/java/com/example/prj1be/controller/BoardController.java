@@ -26,7 +26,7 @@ public class BoardController {
 
     @PostMapping("add")
     public ResponseEntity add(Board board,@RequestParam(value = "uploadFiles[]",required = false) MultipartFile[] files, @SessionAttribute(value = "login",required = false) Member login) throws IOException {
-
+        System.out.println("---");
         if (login == null){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
