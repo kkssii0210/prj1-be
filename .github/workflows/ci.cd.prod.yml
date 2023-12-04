@@ -1,7 +1,7 @@
 name: Deploy workflow on production environment
 on:
   push:
-    branches: [master]
+    branches: ["master"]
 
 env:
   PROJECT_NAME: prj1-be
