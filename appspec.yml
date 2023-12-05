@@ -4,12 +4,12 @@ files:
   - source: /
     destination: /home/ubuntu/prj1-be
 permissions:
-  - object: /home/ubuntu/prj1-be
+  - object: /home/ubuntu/prj1-be/
     owner: ubuntu
     group: ubuntu
 
 hooks:
   AfterInstall:
     - location: after-deploy.sh
-      timeout: 60
+      timeout: 600
       runas: ubuntu

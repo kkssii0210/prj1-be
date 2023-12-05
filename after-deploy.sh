@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 REPOSITORY=/home/ubuntu/prj1-be
 cd $REPOSITORY
 APP_NAME=prj1-be
