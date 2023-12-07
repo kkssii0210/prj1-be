@@ -24,6 +24,7 @@ public class AppConfig {
                 .region(Region.AP_NORTHEAST_2)
                 .credentialsProvider(provider)
                 .build();
+
         return s3;
     }
     @Bean
