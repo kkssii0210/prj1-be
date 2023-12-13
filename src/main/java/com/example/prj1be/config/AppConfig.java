@@ -1,8 +1,12 @@
 package com.example.prj1be.config;
 
+import jakarta.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import software.amazon.awssdk.annotations.NotNull;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -22,6 +26,18 @@ public class AppConfig {
                 .region(Region.AP_NORTHEAST_2)
                 .credentialsProvider(provider)
                 .build();
+
         return s3;
+    }
+    @Bean
+    public WebMvcConfigurer corsConfigure() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(@Nullable CorsRegistry registry) {
+                if (registry != null) {
+                    registry.addMapping("/**").allowedOrigins("*");
+                }
+            }
+        };
     }
 }
