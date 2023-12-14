@@ -1,15 +1,10 @@
-#version: 0.0
-#os: linux
-#files:
-#  - source: /
-#    destination: /home/ubuntu/prj1-be
-#permissions:
-#  - object: /home/ubuntu/prj1-be/
-#    owner: ubuntu
-#    group: ubuntu
-#
-#hooks:
-#  AfterInstall:
-#    - location: deploy.sh
-#      timeout: 600
-#      runas: ubuntu
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /home/ubuntu/prj1-be
+permissions:
+  - object: /home/ubuntu/prj1-be/
+    owner: ubuntu
+    group: ubuntu
+
