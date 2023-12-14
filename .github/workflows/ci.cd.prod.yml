@@ -41,7 +41,7 @@
 #      - name: Make Zip File
 #        run: zip -qq -r ./$GITHUB_SHA.zip .
 #        shell: bash
-#      - name: 🌎 Access to AWS
+#      - name: 🌎 Access to AWS!!
 #        uses: aws-actions/configure-aws-credentials@v2
 #        with:
 #          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
